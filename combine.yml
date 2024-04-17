@@ -1,10 +1,15 @@
-alertmanagerFiles:
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alertmanager
+data:
   alertmanager.yml: 
     global:
       resolve_timeout: 1m
+      
 
     receivers:
-    - name: 'gmail-notifications'
+    - name: 'notifications'
       email_configs:
       - to: GMAIL_ACCOUNT1
         from: GMAIL_ACCOUNT1 # Update your from mail id here
@@ -17,8 +22,19 @@ alertmanagerFiles:
           subject: " Prometheus -  Alert  "
         text: "{{ range .Alerts }} Hi, \n{{ .Annotations.summary }}  \n {{ .Annotations.description }} {{end}} "
 
+      slack_configs:
+      - channel: '#upcommerce-devs' # TODO: Create a Slack Channel named upcommerce-devs in your Slack
+        send_resolved: true
+        api_url: SLACK_WEBHOOK_URL #TODO: Enter your Slack Webhook URL here
+
+
+    route:
+      group_interval: 5m
+      group_wait: 10s
+      receiver: 'slack-notifications'
+      repeat_interval: 1h
     route:
       group_wait: 10s
       group_interval: 2m
-      receiver: 'gmail-notifications'
+      receiver: 'notifications'
       repeat_interval: 2m
